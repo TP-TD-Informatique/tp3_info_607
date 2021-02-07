@@ -37,6 +37,9 @@ byte RC4_gen(byte *P, int *i, int *j) {
  * @param n Le nombres de générations à passer
  */
 void code_RC4_drop(byte *cle, int taille_cle, char *message, int n) {
+    printf("La clé est \"%s\" et le message clair est \"%s\"\n", cle, message);
+    printf("Les %d premières étapes seront ignorées.\n", n);
+
     // Initialisation
     byte P[256];
     for (int i = 0; i < 256; ++i) {
@@ -59,9 +62,12 @@ void code_RC4_drop(byte *cle, int taille_cle, char *message, int n) {
     }
 
     // Chiffrage
-    for (int i = 0; i < strlen(message); ++i) {
-        message[i] ^= RC4_gen(P, &index_i, &index_j);
+    printf("Le code obtenu est :\n\t");
+    for (long unsigned int i = 0; i < strlen(message); ++i) {
+        byte t = RC4_gen(P, &index_i, &index_j);
+        printf("%02X", t ^ message[i]);
     }
+    printf("\n");
 }
 
 int main(int argc, char *argv[]) {
@@ -69,6 +75,8 @@ int main(int argc, char *argv[]) {
         printf("RC4-drop[n], utilisation : %s cle message n\n", argv[0]);
         exit(-1);
     }
-    code_RC4_drop(argv[1], strlen(argv[1]), argv[2], atoi(argv[3]));
+    code_RC4_drop((byte *) argv[1], strlen(argv[1]), argv[2], atoi(argv[3]));
     return 0;
 }
+
+// 863182CBEF7F85
