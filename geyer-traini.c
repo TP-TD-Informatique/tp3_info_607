@@ -1,82 +1,99 @@
-/*
- * TP3 info607 : Maths pour l'informatique
- * RC4 et WEP
- *
- * Kevin Traini
- * Jules Geyer
+/**********************************************************************
+ *** craque une clé WEP en utilisant l'attaque du Fluhrer, Mantin et
+ *** Shamir.
+ *** Les données sont récupérées dans un tube rempli par un
+ *** générateur indépendant.
+ *** TP3 d'info-607 : RC4, WEP et attaque FMS
+ *** Kevin Traini
+ *** Jules Geyer
+ **********************************************************************/
+
+#include "tp3.h"
+
+/***
+ * récupère un paquet de données dans le tube (variable globale tube_fd) :
+ *   - IV est un tableau de IV_size (variable globale) octets qui contiendra
+ *     le vecteur d'initialisation lu,
+ *   - o1 et o2 seront les 2 premiers octets générés par RC4 à partir de la
+ *     clé WEP (secrète) et le vecteur d'initialisation.
+ * La fonction lit également un octet supplémentaire et vérifie qu'il est bien
+ * égal à 0x00.
+ * Si tout a fonctionné, la fonction renvoie IV_size ; sinon, elle renvoie un
+ * nombre strictement négatif.
  */
-
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-
-typedef unsigned char byte;
-
-/**
- * Génère un octet en utilisant RC4
- * @param P La table RC4 mélangée
- * @param i L'index i
- * @param j L'index j
- * @return L'octet généré
- */
-byte RC4_gen(byte *P, int *i, int *j) {
-    *i = (*i + 1) % 256;
-    *j = (*j + P[*i]) % 256;
-    byte t = P[*i];
-    P[*i] = P[*j];
-    P[*j] = t;
-
-    return P[(P[*i] + P[*j]) % 256];
-}
-
-/**
- * Chiffre message avec RC4 en passant n générations
- * @param cle La clé pour généré la table RC4
- * @param taille_cle La taille de la clé
- * @param message Le message à chiffrer
- * @param n Le nombres de générations à passer
- */
-void code_RC4_drop(byte *cle, int taille_cle, char *message, int n) {
-    printf("La clé est \"%s\" et le message clair est \"%s\"\n", cle, message);
-    printf("Les %d premières étapes seront ignorées.\n", n);
-
-    // Initialisation
-    byte P[256];
-    for (int i = 0; i < 256; ++i) {
-        P[i] = i;
-    }
-
-    int j = 0;
-    for (int i = 0; i < 256; ++i) {
-        j = (j + P[i] + cle[i % taille_cle]) % 256;
-        // Echange
-        byte t = P[i];
-        P[i] = P[j];
-        P[j] = t;
-    }
-    int index_i = 0, index_j = 0;
-
-    // Passage des n premiers octets
-    for (int i = 0; i < n; ++i) {
-        RC4_gen(P, &index_i, &index_j);
-    }
-
-    // Chiffrage
-    printf("Le code obtenu est :\n\t");
-    for (long unsigned int i = 0; i < strlen(message); ++i) {
-        byte t = RC4_gen(P, &index_i, &index_j);
-        printf("%02X", t ^ message[i]);
-    }
-    printf("\n");
-}
-
-int main(int argc, char *argv[]) {
-    if (argc != 4) {
-        printf("RC4-drop[n], utilisation : %s cle message n\n", argv[0]);
-        exit(-1);
-    }
-    code_RC4_drop((byte *) argv[1], strlen(argv[1]), argv[2], atoi(argv[3]));
+int get_data(byte* IV, byte* o1, byte* o2)
+{
+    // TODO...
     return 0;
 }
 
-// 863182CBEF7F85
+/***
+ * récupère un paquet de données WEP générées et vérifie que la clé WEP passée
+ * en argument génère bien le même premier octet avec le même vecteur
+ * d'initialisation.
+ * La fonction renvoie 1 lorsque c'est le cas, et 0 sinon.
+ */
+int check_byte(byte* cle_WEP)
+{
+    // TODO...
+    return 0;
+}
+
+/***
+ * teste un vecteur d'initialisation :
+ *   - "n" est la taille de la clé déjà connue
+ *   - "o1" est le premier octet généré par RC4 avec "IV"
+ *   - "o2" est le premier octet généré par RC4 avec "IV"
+ *   - "key" contient les morceaux de la clé que l'on a déjà calculés
+ *
+ * La fonction renvoie 1 si le vecteur d'initialisation était faible,
+ * et dans ce cas, la prédiction correspondante est renvoyée dans le
+ * dernier paramètre "prediction".
+ *
+ * Si le vecteur d'initialisation n'était pas faible, cette fonction
+ * renvoie 0.
+ */
+int weak(int n, byte* key, byte o1, byte o2, byte* prediction)
+{
+    // TODO...
+    return 0;
+}
+
+/***
+ * craque une clé WEP complète
+ * L'argument devra contenir la prédiction finale pour la clé complète.
+ *
+ * Pour chaque prédiction d'un octet de la clé, la fonction attend d'avoir
+ * observé
+ *   - soit expected_weak_IV (variable globale) vecteur faibles
+ *   - soit expected_IV (variable globale) vecteurs
+ * Lorsque c'est fait, une prédiction pour l'octet en cours est faite, et la
+ * fonction passe à l'octet suivant.
+ *
+ * ====
+ * Après une prédiction de la clé, la fonction devra faire nb_tests (variable
+ * globale) vérifications avec la fonction check_byte.
+ *   - Si tous les tests réussissent, la fonction renverra un nombre
+ * strictement positif.
+ *   - Si au moins un test échoue, la fonction renverra un nombre strictement
+ *     négatif.
+ *   - Si aucun test n'est fait, la fonction renverra 0.
+ *
+ * ====
+ * Si un des tests précédent échoue, la fonction devra essayer d'améliorer la
+ * prédiction pour tous les octets de la clé. Ce nombre d'essais
+ * supplémentaire est borné par nb_retries (variable globale).
+ * Si la clé prédite passe tous les tests avant cette borne, la fonction
+ * pourra se terminer.
+ */
+int crack_WEP(byte* cle_WEP)
+{
+    // TODO...
+
+    // ATTENTION, cle_WEP ne contient que la partie fixe de la clé alors que
+    // la fonction weak prend en argument la clé complète (partie variable +
+    // partie fixe). Il faut donc déclarer une nouvelle variable pour contenir
+    // la clé complète.
+
+    return 0;
+}
