@@ -21,9 +21,29 @@
  * Si tout a fonctionné, la fonction renvoie IV_size ; sinon, elle renvoie un
  * nombre strictement négatif.
  */
-int get_data(byte* IV, byte* o1, byte* o2)
-{
-    // TODO...
+int get_data(byte *IV, byte *o1, byte *o2) {
+    byte buffer;
+    // Lecture de IV
+    for (int i = 0; i < IV_size; ++i) {
+        if (read(tube_fd, &buffer, 1) == 1) // On vérifie si la lecture s'est bien passée
+            IV[i] = buffer;
+        else
+            return -1;
+    }
+
+    // Lecture de o1
+    if (read(tube_fd, &buffer, 1) == 1)
+        *o1 = buffer;
+
+    // Lecture de o2
+    if (read(tube_fd, &buffer, 1) == 1)
+        *o2 = buffer;
+
+    // Vérification prochain octet à 0
+    if (read(tube_fd, &buffer, 1) == 1)
+        if (buffer == 0x00)
+            return IV_size;
+
     return 0;
 }
 
@@ -33,8 +53,7 @@ int get_data(byte* IV, byte* o1, byte* o2)
  * d'initialisation.
  * La fonction renvoie 1 lorsque c'est le cas, et 0 sinon.
  */
-int check_byte(byte* cle_WEP)
-{
+int check_byte(byte *cle_WEP) {
     // TODO...
     return 0;
 }
@@ -53,8 +72,7 @@ int check_byte(byte* cle_WEP)
  * Si le vecteur d'initialisation n'était pas faible, cette fonction
  * renvoie 0.
  */
-int weak(int n, byte* key, byte o1, byte o2, byte* prediction)
-{
+int weak(int n, byte *key, byte o1, byte o2, byte *prediction) {
     // TODO...
     return 0;
 }
@@ -86,8 +104,7 @@ int weak(int n, byte* key, byte o1, byte o2, byte* prediction)
  * Si la clé prédite passe tous les tests avant cette borne, la fonction
  * pourra se terminer.
  */
-int crack_WEP(byte* cle_WEP)
-{
+int crack_WEP(byte *cle_WEP) {
     // TODO...
 
     // ATTENTION, cle_WEP ne contient que la partie fixe de la clé alors que
