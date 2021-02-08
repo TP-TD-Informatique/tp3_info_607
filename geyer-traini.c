@@ -44,7 +44,7 @@ int get_data(byte *IV, byte *o1, byte *o2) {
         if (buffer == 0x00)
             return IV_size;
 
-    return 0;
+    return -1;
 }
 
 /***
@@ -73,7 +73,30 @@ int check_byte(byte *cle_WEP) {
  * renvoie 0.
  */
 int weak(int n, byte *key, byte o1, byte o2, byte *prediction) {
-    // TODO...
+    // KSA
+    byte P[256];
+    for (int i = 0; i < 256; ++i) { // Initialisation de la table RC4
+        P[i] = i;
+    }
+    int j = 0;
+    for (int i = 0; i < n; ++i) { // N premiers mélanges de la table
+        j = (j + P[i] + key[i]) % 256;
+        // Echange
+        byte t = P[i];
+        P[i] = P[j];
+        P[j] = t;
+    }
+
+    // Vérification vecteur faible
+    if (P[1] < n && (P[1] + P[P[1]] == n)) {
+        // Cherche o1 dans P
+        int i = 0;
+        while (i < 256 && P[i] != o1) i++;
+
+        *prediction = i - j - P[n];
+        return 1;
+    }
+
     return 0;
 }
 
