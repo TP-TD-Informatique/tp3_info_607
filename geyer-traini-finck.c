@@ -6,6 +6,7 @@
  *** TP3 d'info-607 : RC4, WEP et attaque FMS
  *** Kevin Traini
  *** Jules Geyer
+ *** Jules Finck
  **********************************************************************/
 
 #include "tp3.h"
@@ -128,12 +129,56 @@ int weak(int n, byte *key, byte o1, byte o2, byte *prediction) {
  * pourra se terminer.
  */
 int crack_WEP(byte *cle_WEP) {
-    // TODO...
+    byte key[IV_size + key_size]; // La clé IV + WEP
 
-    // ATTENTION, cle_WEP ne contient que la partie fixe de la clé alors que
-    // la fonction weak prend en argument la clé complète (partie variable +
-    // partie fixe). Il faut donc déclarer une nouvelle variable pour contenir
-    // la clé complète.
+    // Pour chaque octet de la clé WEP
+    for (int i = IV_size; i < IV_size + key_size; ++i) {
+        DEBUG(2, "\n>>> Recherche de l'octet %d\n", i - IV_size);
+        int it = 0; // Nombre de vecteurs testés
+        int nbIV = 0; // Nombre de vecteurs faible
 
-    return 0;
+        byte predictions[256]; // Tableau des prédictions
+        for (int j = 0; j < 256; ++j) {
+            predictions[j] = 0;
+        }
+        while ((expected_IV <= 0 ? 1 : it < expected_IV) && (expected_weak_IV <= 0 ? 1 : nbIV < expected_weak_IV)) {
+            // Tant qu'on n'a pas assez de prédictions (ou trop)
+            byte IV[IV_size]; // Le vecteur d'initialisation
+            byte o1, o2; // Les 2 premiers octets de la clé WEP
+            if (get_data(IV, &o1, &o2) < 0)
+                return -1;
+            for (int i = 0; i < IV_size; ++i) {
+                key[i] = IV[i];
+            }
+            byte prediction;
+            if (weak(i, key, o1, o2, &prediction)) { // Si le vecteur est faible
+                predictions[prediction]++;
+                nbIV++;
+                DEBUG(2, ".");
+            }
+
+            it++;
+        }
+
+        DEBUG(2, "\n\t- il y a eu %d vecteurs faibles sur %d vecteurs testés.\n", nbIV, it);
+        // Cherche le vecteur le plus fréquent
+        int maxNb = predictions[0];
+        int b = 0;
+        for (int j = 0; j < 256; ++j) {
+            if (predictions[j] > maxNb) {
+                maxNb = predictions[j];
+                b = j;
+            }
+        }
+        DEBUG(2, "\t- l'octet le plus fréquent est %02x, avec un score de %d\n", b, maxNb);
+        DEBUG(2, "\t- la clé partielle est donc ");
+        for (int j = 0; j < i - IV_size; ++j) {
+            DEBUG(2, "%02x ", cle_WEP[j]);
+        }
+        DEBUG(2, "**%02x**\n", b);
+        cle_WEP[i - IV_size] = b;
+        key[i] = b;
+    }
+
+    return key_size;
 }

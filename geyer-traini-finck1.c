@@ -4,6 +4,7 @@
  *
  * Kevin Traini
  * Jules Geyer
+ * Jules Finck
  */
 
 #include <string.h>

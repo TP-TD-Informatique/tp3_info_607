@@ -20,7 +20,7 @@
 
 
 ## à modifier
-NOM = geyer-traini
+NOM = geyer-traini-finck
 
 # CFLAGS = -Wall -Werror -Wextra -pedantic -std=gnu99  -O3
 CFLAGS = -Wall -Wextra -pedantic -std=gnu99  -O3 -Wno-unused-parameter
